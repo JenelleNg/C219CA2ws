@@ -112,7 +112,7 @@ app.get("/allposts", async (req, res) => {
     }
 });
 
-app.post("/addpost", async (req, res) => {
+app.post("/createpost", async (req, res) => {
     const { record_type, username, title, details, pic } = req.body;
     let connection;
 
@@ -131,7 +131,7 @@ app.post("/addpost", async (req, res) => {
     }
 });
 
-app.put('/updatepost/:id', async (req, res) => {
+app.put('/editpost/:id', async (req, res) => {
     const { id } = req.params;
     const { record_type, username, title, details, pic } = req.body;
     try{
