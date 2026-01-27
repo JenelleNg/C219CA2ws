@@ -95,9 +95,6 @@ function requireAuth(req, res, next) {
     }
 }
 
-app.post("/addpost", requireAuth, async (req, res) => {
-});
-
 app.get("/allposts", async (req, res) => {
     let connection;
     try {
@@ -112,7 +109,7 @@ app.get("/allposts", async (req, res) => {
     }
 });
 
-app.post("/createpost", async (req, res) => {
+app.post("/createpost", requireAuth, async (req, res) => {
     const { record_type, username, title, details, pic } = req.body;
     let connection;
 
