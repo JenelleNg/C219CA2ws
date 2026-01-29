@@ -1,6 +1,7 @@
 const express = require("express");
 const mysql = require("mysql2/promise");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 const app = express();
@@ -8,7 +9,9 @@ app.use(express.json());
 
 const port = process.env.PORT || 3000;
 
-// Database config
+/* =========================
+   Database Config
+   ========================= */
 const dbConfig = {
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -20,21 +23,18 @@ const dbConfig = {
     queueLimit: 0,
 };
 
-const pool = mysql.createPool(dbConfig);
-
-// Secure CORS
+/* =========================
+   CORS Config
+   ========================= */
 const allowedOrigins = [
     "http://localhost:3000",
-    //"https://card-app-smoky.vercel.app",
-    // "https://YOUR-frontend.onrender.com"
+    // add deployed frontend later if needed
 ];
 
 app.use(
     cors({
         origin: function (origin, callback) {
-            // allow requests with no origin (Postman/server-to-server)
             if (!origin) return callback(null, true);
-
             if (allowedOrigins.includes(origin)) {
                 return callback(null, true);
             }
@@ -43,38 +43,44 @@ app.use(
         methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allowedHeaders: ["Content-Type", "Authorization"],
         credentials: false,
-    }),
+    })
 );
 
+/* =========================
+   Demo User + Auth
+   ========================= */
 const DEMO_USER = {
     id: 1,
     username: "admin",
     password: "admin123",
 };
 
-// login
-const jwt = require("jsonwebtoken");
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// login
+/* =========================
+   Login
+   ========================= */
 app.post("/login", async (req, res) => {
     const { username, password } = req.body;
 
-    if (username !== DEMO_USER.username && password !== DEMO_USER.password) {
+    if (username !== DEMO_USER.username || password !== DEMO_USER.password) {
         return res.status(401).json({ error: "Invalid credentials" });
     }
 
     const token = jwt.sign(
         { userId: DEMO_USER.id, username: DEMO_USER.username },
         JWT_SECRET,
-        { expiresIn: "1h" },
+        { expiresIn: "1h" }
     );
 
     res.json({ token });
 });
 
+/* =========================
+   Auth Middleware
+   ========================= */
 function requireAuth(req, res, next) {
-    const header = req.headers.authorization; // "Bearer <token>"
+    const header = req.headers.authorization;
 
     if (!header) {
         return res.status(401).json({ error: "Authorization header missing" });
@@ -90,16 +96,21 @@ function requireAuth(req, res, next) {
         const payload = jwt.verify(token, JWT_SECRET);
         req.user = payload;
         next();
-    } catch (error) {
+    } catch {
         return res.status(401).json({ error: "Invalid or expired token" });
     }
 }
 
+/* =========================
+   Get All Posts
+   ========================= */
 app.get("/allposts", async (req, res) => {
     let connection;
     try {
         connection = await mysql.createConnection(dbConfig);
-        const [rows] = await connection.execute("SELECT * FROM communityC219");
+        const [rows] = await connection.execute(
+            "SELECT * FROM communityC219"
+        );
         res.json(rows);
     } catch (err) {
         console.error(err);
@@ -109,18 +120,39 @@ app.get("/allposts", async (req, res) => {
     }
 });
 
+/* =========================
+   Create Post (likes added)
+   ========================= */
 app.post("/createpost", requireAuth, async (req, res) => {
-    const { record_type, username, title, details, pic } = req.body;
+    const {
+        record_type,
+        username,
+        title,
+        details,
+        pic,
+        likes = 0
+    } = req.body;
+
     let connection;
     try {
         connection = await mysql.createConnection(dbConfig);
+
         const [result] = await connection.execute(
-            "INSERT INTO communityC219 (record_type, username, title, details, pic) VALUES (?, ?, ?, ?, ?)",
-            [record_type, username, title, details, pic]
-        );
-        res.status(201).json({ id: result.insertId, record_type, username, title, details, pic}
+            `INSERT INTO communityC219 
+       (record_type, username, title, details, pic, likes)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+            [record_type, username, title, details, pic, likes]
         );
 
+        res.status(201).json({
+            id: result.insertId,
+            record_type,
+            username,
+            title,
+            details,
+            pic,
+            likes
+        });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Server error - could not add post" });
@@ -129,31 +161,71 @@ app.post("/createpost", requireAuth, async (req, res) => {
     }
 });
 
-app.put('/editpost/:id', async (req, res) => {
+/* =========================
+   Edit Post (likes supported)
+   ========================= */
+app.put("/editpost/:id", async (req, res) => {
     const { id } = req.params;
-    const { record_type, username, title, details, pic } = req.body;
-    try{
-        let connection = await mysql.createConnection(dbConfig);
-        await connection.execute('UPDATE communityC219 SET record_type=?, username=?, title=?, details=?, pic=? WHERE id=?', [record_type, username, title, details, pic, id]);
-        res.status(201).json({ message: 'Post ' + id + ' updated successfully!' });
+    const {
+        record_type,
+        username,
+        title,
+        details,
+        pic,
+        likes
+    } = req.body;
+
+    let connection;
+    try {
+        connection = await mysql.createConnection(dbConfig);
+
+        await connection.execute(
+            `UPDATE communityC219 
+       SET record_type=?, username=?, title=?, details=?, pic=?, likes=?
+       WHERE id=?`,
+            [record_type, username, title, details, pic, likes, id]
+        );
+
+        res.json({ message: `Post ${id} updated successfully` });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: 'Server error - could not update post ' + id });
+        res.status(500).json({
+            message: `Server error - could not update post ${id}`,
+        });
+    } finally {
+        if (connection) connection.end();
     }
 });
 
-app.delete('/deletepost/:id', async (req, res) => {
+/* =========================
+   Delete Post
+   ========================= */
+app.delete("/deletepost/:id", async (req, res) => {
     const { id } = req.params;
-    try{
-        let connection = await mysql.createConnection(dbConfig);
-        await connection.execute('DELETE FROM communityC219 WHERE id=?', [id]);
-        res.status(201).json({ message: 'Post ' + id + ' deleted successfully!' });
+
+    let connection;
+    try {
+        connection = await mysql.createConnection(dbConfig);
+
+        await connection.execute(
+            "DELETE FROM communityC219 WHERE id=?",
+            [id]
+        );
+
+        res.json({ message: `Post ${id} deleted successfully` });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: 'Server error - could not delete post ' + id });
+        res.status(500).json({
+            message: `Server error - could not delete post ${id}`,
+        });
+    } finally {
+        if (connection) connection.end();
     }
 });
 
+/* =========================
+   Start Server
+   ========================= */
 app.listen(port, () => {
     console.log("Server running on port", port);
 });
