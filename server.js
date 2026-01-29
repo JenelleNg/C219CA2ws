@@ -105,7 +105,8 @@ app.get("/allposts", async (req, res) => {
 app.post("/createpost", requireAuth, async (req, res) => {
     const { record_type, title, details, pic } = req.body;
     const username = req.user.username;
-    const cleanedPic = pic?.trim() || null;
+
+    const cleanedPic = pic?.trim() || null; // handle empty strings
 
     let connection;
     try {
@@ -129,7 +130,6 @@ app.post("/createpost", requireAuth, async (req, res) => {
         if (connection) connection.end();
     }
 });
-
 
 app.put("/editpost/:id", async (req, res) => {
     const { id } = req.params;
