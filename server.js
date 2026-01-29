@@ -105,16 +105,22 @@ app.get("/allposts", async (req, res) => {
 app.post("/createpost", requireAuth, async (req, res) => {
     const { record_type, title, details, pic } = req.body;
     const username = req.user.username;
+    const cleanedPic = pic?.trim() || null;
 
     let connection;
     try {
         connection = await mysql.createConnection(dbConfig);
         const [result] = await connection.execute(
             "INSERT INTO communityC219 (record_type, username, title, details, pic) VALUES (?, ?, ?, ?, ?)",
-            [record_type, username, title, details, pic]
+            [record_type, username, title, details, cleanedPic]
         );
         res.status(201).json({
-            id: result.insertId, record_type, username, title, details, pic
+            id: result.insertId,
+            record_type,
+            username,
+            title,
+            details,
+            pic: cleanedPic
         });
     } catch (err) {
         console.error(err);
@@ -123,6 +129,7 @@ app.post("/createpost", requireAuth, async (req, res) => {
         if (connection) connection.end();
     }
 });
+
 
 app.put("/editpost/:id", async (req, res) => {
     const { id } = req.params;
