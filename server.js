@@ -47,6 +47,9 @@ const DEMO_USER = {
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
+app.get("/", (req, res) => {
+    res.send("Backend is running!");
+});
 
 app.post("/login", async (req, res) => {
     const { username, password } = req.body;
