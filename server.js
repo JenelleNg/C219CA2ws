@@ -103,7 +103,9 @@ app.get("/allposts", async (req, res) => {
 });
 
 app.post("/createpost", requireAuth, async (req, res) => {
-    const { record_type, username, title, details, pic } = req.body;
+    const { record_type, title, details, pic } = req.body;
+    const username = req.user.username; // get from JWT
+
     let connection;
     try {
         connection = await mysql.createConnection(dbConfig);
@@ -111,9 +113,14 @@ app.post("/createpost", requireAuth, async (req, res) => {
             "INSERT INTO communityC219 (record_type, username, title, details, pic) VALUES (?, ?, ?, ?, ?)",
             [record_type, username, title, details, pic]
         );
-        res.status(201).json({ id: result.insertId, record_type, username, title, details, pic}
-        );
-
+        res.status(201).json({
+            id: result.insertId,
+            record_type,
+            username,
+            title,
+            details,
+            pic
+        });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Server error - could not add post" });
@@ -121,6 +128,8 @@ app.post("/createpost", requireAuth, async (req, res) => {
         if (connection) connection.end();
     }
 });
+
+
 
 app.put("/editpost/:id", async (req, res) => {
     const { id } = req.params;
