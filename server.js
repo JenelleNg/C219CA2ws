@@ -9,9 +9,6 @@ app.use(express.json());
 
 const port = process.env.PORT || 3000;
 
-/* =========================
-   Database Config
-   ========================= */
 const dbConfig = {
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -23,12 +20,8 @@ const dbConfig = {
     queueLimit: 0,
 };
 
-/* =========================
-   CORS Config
-   ========================= */
 const allowedOrigins = [
     "http://localhost:3000",
-    // add deployed frontend later if needed
 ];
 
 app.use(
@@ -46,9 +39,6 @@ app.use(
     })
 );
 
-/* =========================
-   Demo User + Auth
-   ========================= */
 const DEMO_USER = {
     id: 1,
     username: "admin",
@@ -57,9 +47,7 @@ const DEMO_USER = {
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
-/* =========================
-   Login
-   ========================= */
+
 app.post("/login", async (req, res) => {
     const { username, password } = req.body;
 
@@ -76,9 +64,6 @@ app.post("/login", async (req, res) => {
     res.json({ token });
 });
 
-/* =========================
-   Auth Middleware
-   ========================= */
 function requireAuth(req, res, next) {
     const header = req.headers.authorization;
 
@@ -101,9 +86,6 @@ function requireAuth(req, res, next) {
     }
 }
 
-/* =========================
-   Get All Posts
-   ========================= */
 app.get("/allposts", async (req, res) => {
     let connection;
     try {
@@ -120,9 +102,6 @@ app.get("/allposts", async (req, res) => {
     }
 });
 
-/* =========================
-   Create Post (likes added)
-   ========================= */
 app.post("/createpost", requireAuth, async (req, res) => {
     const { record_type, username, title, details, pic } = req.body;
     let connection;
@@ -143,19 +122,9 @@ app.post("/createpost", requireAuth, async (req, res) => {
     }
 });
 
-/* =========================
-   Edit Post (likes supported)
-   ========================= */
 app.put("/editpost/:id", async (req, res) => {
     const { id } = req.params;
-    const {
-        record_type,
-        username,
-        title,
-        details,
-        pic,
-        likes
-    } = req.body;
+    const {record_type, username, title, details, pic, likes} = req.body;
 
     let connection;
     try {
@@ -179,9 +148,6 @@ app.put("/editpost/:id", async (req, res) => {
     }
 });
 
-/* =========================
-   Delete Post
-   ========================= */
 app.delete("/deletepost/:id", async (req, res) => {
     const { id } = req.params;
 
@@ -205,9 +171,6 @@ app.delete("/deletepost/:id", async (req, res) => {
     }
 });
 
-/* =========================
-   Start Server
-   ========================= */
 app.listen(port, () => {
     console.log("Server running on port", port);
 });
