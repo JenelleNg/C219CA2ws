@@ -113,7 +113,7 @@ app.post("/createpost", requireAuth, async (req, res) => {
             "INSERT INTO communityC219 (record_type, username, title, details, pic) VALUES (?, ?, ?, ?, ?)",
             [record_type, username, title, details, pic]
         );
-        res.status(201).json({id: result.insertId, record_type, username, title, details, pic, likes: 0});
+        res.status(201).json({ id: result.insertId, record_type, username, title, details, pic });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Server error - could not add post" });
@@ -122,44 +122,52 @@ app.post("/createpost", requireAuth, async (req, res) => {
     }
 });
 
-app.put("/editpost/:id", requireAuth, async (req, res) => {
+
+
+app.put("/editpost/:id", async (req, res) => {
     const { id } = req.params;
-    const { record_type, title, details, pic, likes } = req.body;
+    const {record_type, username, title, details, pic, likes} = req.body;
 
     let connection;
     try {
         connection = await mysql.createConnection(dbConfig);
 
-        aawait connection.execute(
-            `UPDATE communityC219
-       SET record_type=?, title=?, details=?, pic=?, likes=?
+        await connection.execute(
+            `UPDATE communityC219 
+       SET record_type=?, username=?, title=?, details=?, pic=?, likes=?
        WHERE id=?`,
-            [record_type, title, details, pic, likes, id]
+            [record_type, username, title, details, pic, likes, id]
         );
 
         res.json({ message: `Post ${id} updated successfully` });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: "Server error - could not update post" });
+        res.status(500).json({
+            message: `Server error - could not update post ${id}`,
+        });
     } finally {
         if (connection) connection.end();
     }
 });
 
-app.delete("/deletepost/:id", requireAuth, async (req, res) => {
+app.delete("/deletepost/:id", async (req, res) => {
     const { id } = req.params;
 
     let connection;
     try {
         connection = await mysql.createConnection(dbConfig);
+
         await connection.execute(
             "DELETE FROM communityC219 WHERE id=?",
             [id]
         );
+
         res.json({ message: `Post ${id} deleted successfully` });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: "Server error - could not delete post" });
+        res.status(500).json({
+            message: `Server error - could not delete post ${id}`,
+        });
     } finally {
         if (connection) connection.end();
     }
