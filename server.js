@@ -124,35 +124,17 @@ app.get("/allposts", async (req, res) => {
    Create Post (likes added)
    ========================= */
 app.post("/createpost", requireAuth, async (req, res) => {
-    const {
-        record_type,
-        username,
-        title,
-        details,
-        pic,
-        likes = 0
-    } = req.body;
-
+    const { record_type, username, title, details, pic } = req.body;
     let connection;
     try {
         connection = await mysql.createConnection(dbConfig);
-
         const [result] = await connection.execute(
-            `INSERT INTO communityC219 
-       (record_type, username, title, details, pic, likes)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-            [record_type, username, title, details, pic, likes]
+            "INSERT INTO communityC219 (record_type, username, title, details, pic) VALUES (?, ?, ?, ?, ?)",
+            [record_type, username, title, details, pic]
+        );
+        res.status(201).json({ id: result.insertId, record_type, username, title, details, pic}
         );
 
-        res.status(201).json({
-            id: result.insertId,
-            record_type,
-            username,
-            title,
-            details,
-            pic,
-            likes
-        });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Server error - could not add post" });
