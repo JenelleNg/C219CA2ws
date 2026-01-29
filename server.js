@@ -133,9 +133,7 @@ app.put("/editpost/:id", async (req, res) => {
         connection = await mysql.createConnection(dbConfig);
 
         await connection.execute(
-            `UPDATE communityC219 
-       SET record_type=?, username=?, title=?, details=?, pic=?, likes=?
-       WHERE id=?`,
+            "UPDATE communityC219 SET record_type=?, username=?, title=?, details=?, pic=?, likes=? WHERE id=?",
             [record_type, username, title, details, pic, likes, id]
         );
 
