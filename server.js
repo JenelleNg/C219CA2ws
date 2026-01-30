@@ -24,24 +24,27 @@ const allowedOrigins = [
     "https://c219ca2-chi.vercel.app",
 ];
 
-app.use(cors({
-    origin: function (origin, callback) {
-        if (!origin) return callback(null, true);
-        if (allowedOrigins.includes(origin)) return callback(null, true);
-        callback(new Error("Not allowed by CORS"));
-    },
-    methods: ["GET","POST","PUT","DELETE","OPTIONS"],
-    allowedHeaders: ["Content-Type","Authorization"],
-}));
-
-app.options("*", cors());
+app.use(
+    cors({
+        origin: function (origin, callback) {
+            if (!origin) return callback(null, true);
+            if (allowedOrigins.includes(origin)) {
+                return callback(null, true);
+            }
+            return callback(new Error("Not allowed by CORS"));
+        },
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+    })
+);
 
 const DEMO_USER = {
     id: 1,
     username: "admin",
     password: "admin123",
 };
-const JWT_SECRET = process.env.JWT_SECRET || "secret";
+
+const JWT_SECRET = "44c4cf6deb4d0bf6e1b857431aa53712" || "secret";
 
 function requireAuth(req, res, next) {
     const header = req.headers.authorization;
