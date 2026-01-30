@@ -9,23 +9,6 @@ app.use(express.json());
 
 const port = process.env.PORT || 3000;
 
-const allowedOrigins = [
-    "http://localhost:3000",
-    "https://c219ca2-chi.vercel.app",
-];
-
-app.use(cors({
-    origin: function (origin, callback) {
-        if (!origin) return callback(null, true); // allow curl/Postman
-        if (allowedOrigins.includes(origin)) return callback(null, true);
-        callback(new Error("Not allowed by CORS"));
-    },
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-}));
-
-app.options("*", cors());
-
 const dbConfig = {
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -36,6 +19,27 @@ const dbConfig = {
     connectionLimit: 10,
     queueLimit: 0,
 };
+const allowedOrigins = [
+    "http://localhost:3000",
+    "https://c219ca2-chi.vercel.app",
+];
+
+app.use(
+    cors({
+        origin: function (origin, callback) {
+            if (!origin) return callback(null, true);
+
+            if (allowedOrigins.includes(origin)) {
+                return callback(null, true);
+            }
+
+            return callback(new Error("Not allowed by CORS"));
+        },
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+        credentials: true,
+    })
+);
 
 const DEMO_USER = {
     id: 1,
@@ -43,8 +47,7 @@ const DEMO_USER = {
     password: "admin123",
 };
 
-const JWT_SECRET = process.env.JWT_SECRET || "secret";
-console.log("JWT_SECRET is:", JWT_SECRET);
+const JWT_SECRET = "process.env.JWT_SECRET" || "secret";
 
 function requireAuth(req, res, next) {
     const header = req.headers.authorization;
