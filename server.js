@@ -1,14 +1,16 @@
+// server.js
 const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
-require("dotenv").config();
 
 const app = express();
 app.use(express.json());
 
-const port = process.env.PORT || 3000;
+// Use port 3001 for backend to avoid conflict with React dev server
+const port = 3001;
 
-const allowedOrigins = ["http://localhost:3000", "https://c219ca2-chi.vercel.app"];
+// CORS setup
+const allowedOrigins = ["http://localhost:3000"];
 app.use(
     cors({
         origin: function (origin, callback) {
@@ -21,14 +23,17 @@ app.use(
     })
 );
 
+// Demo user (hardcoded)
 const DEMO_USER = {
     id: 1,
     username: "admin",
     password: "admin123",
 };
 
-const JWT_SECRET = "process.env.JWT_SECRET";
+// JWT secret (only on backend!)
+const JWT_SECRET = "44c4cf6deb4d0bf6e1b857431aa53712";
 
+// Middleware to protect routes
 function requireAuth(req, res, next) {
     const header = req.headers.authorization;
     if (!header) return res.status(401).json({ error: "Authorization header missing" });
@@ -44,8 +49,11 @@ function requireAuth(req, res, next) {
         return res.status(401).json({ error: "Invalid or expired token" });
     }
 }
+
+// Test route
 app.get("/", (req, res) => res.send("Backend is running!"));
 
+// Login route
 app.post("/login", (req, res) => {
     const { username, password } = req.body;
 
@@ -62,8 +70,11 @@ app.post("/login", (req, res) => {
     res.json({ token });
 });
 
-app.get("/protected", requireAuth, (req, res) => {
-    res.json({ message: `Hello ${req.user.username}, you are authorized!` });
+// Example protected route
+app.get("/posts", requireAuth, (req, res) => {
+    res.json({
+        message: `Hello ${req.user.username}, welcome to your posts page!`,
+    });
 });
 
-app.listen(port, () => console.log(`Server running on port ${port}`));
+app.listen(port, () => console.log(`Backend running on port ${port}`));
