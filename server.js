@@ -19,7 +19,6 @@ const dbConfig = {
     connectionLimit: 10,
     queueLimit: 0,
 };
-
 const allowedOrigins = [
     "http://localhost:3000",
     "https://familyconnect-nine.vercel.app",
