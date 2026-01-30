@@ -22,7 +22,7 @@ const dbConfig = {
 
 const allowedOrigins = [
     "http://localhost:3000",
-    "https://communitywebsitec219ca2.vercel.app",
+    "https://FamilyConnect.vercel.app",
 ];
 
 app.use(
