@@ -44,7 +44,7 @@ const DEMO_USER = {
     password: "admin123",
 };
 
-const JWT_SECRET = process.env.JWT_SECRET || "secret";
+const JWT_SECRET = "44c4cf6deb4d0bf6e1b857431aa53712" || "secret";
 
 function requireAuth(req, res, next) {
     const header = req.headers.authorization;
